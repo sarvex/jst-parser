@@ -80,10 +80,7 @@ def file_title(path):
     Get only the title of a path.
     """
     names = path.split(os.sep)
-    if len(names) == 0:
-        return path
-    else:
-        return names[-1]
+    return path if len(names) == 0 else names[-1]
 
 def walk(compile_func):
     """
@@ -139,9 +136,10 @@ def compile_file(source, dest, force):
     parse source and write to dest, only if source is newer
     force will make it definitely compile
     """
-    if force or compare_file_date(source, dest):
-        print("Parsing %s." % file_title(source))
-        file = open(dest, 'w')
+    if not force and not compare_file_date(source, dest):
+        return
+    print(f"Parsing {file_title(source)}.")
+    with open(dest, 'w') as file:
         in_text = open(source, 'r').read().decode()
         template = Template(in_text)
 
@@ -150,15 +148,14 @@ def compile_file(source, dest, force):
         hash.update({
             'MEDIA_URL': settings.MEDIA_URL,
         })
-        
+
         context = Context(hash)
         file.write(template.render(context))
-        file.close()
 
 def clean_file(source, dest, force):
     if os.path.exists(dest):
         os.remove(dest)
-        print("removing %s" % dest)
+        print(f"removing {dest}")
 
 def compile():
     """
